@@ -1,0 +1,18 @@
+1. create an account
+2. Login
+3.Update your profile
+4. feed page - explore
+5.Send connection request
+6.See our Matches
+7.see the request we have sent friend
+8. Update your profile
+
+Tech planing 
+
+2  microservice :  Front end , Back End 
+
+react stack 
+
+--Node js 
+-Mongo DB
+
