@@ -1,15 +1,7 @@
 const express = require('express');
 const app = express();
+const  { adminAuth } = require('./middlewares/auth');
 
-app.use((req,res)=>{
-    console.log("Middleware 1");
+app.listen(7777, () => {
+    console.log("Server is running on port 7777");
 });
-
-app.use('/',(res,req)=>{
-    res.send("Hello World");
-});
-
-app.listen(3000,() =>{
-    console.log("Server is running on port 3000");
-});
-
