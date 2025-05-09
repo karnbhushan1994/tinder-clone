@@ -82,30 +82,38 @@ app.delete("/user", async (req, res) => {
   }
 });
 
-app.patch("/user", async (req, res) => {
-  const userId = req.body.userId;
-  const updateData = req.body.updateData; // Assuming updateData is an object with the fields to update
+app.patch("/user/:userId", async (req, res) => {
+  const userId = req.params?.userId;
+  const allowedFields = ['firstName', 'lastName', 'age', 'gender', 'photoUrl', 'skills'];
+  const updateData = {};
+
+  for (const key of allowedFields) {
+    if (req.body.hasOwnProperty(key)) {
+      updateData[key] = req.body[key];
+    }
+  }
 
   try {
-    const foundUser = await User.findOneAndUpdate(
+    const updatedUser = await User.findOneAndUpdate(
       { _id: userId },
       { $set: updateData },
-      { new: true } // Return the updated document
+      { new: true, runValidators: true } // runValidators ensures enum checks, etc.
     );
 
-    if (!foundUser) {
+    if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
     return res.status(200).json({
       message: "User updated successfully",
-      user: foundUser,
+      user: updatedUser,
     });
   } catch (error) {
     console.error("Error updating user:", error);
     return res.status(500).json({ message: "Error updating user", error });
   }
 });
+
 
 connectDB(); // Connect to MongoDB
 const PORT = process.env.PORT || 7777;

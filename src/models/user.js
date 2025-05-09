@@ -5,6 +5,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
+    minlength: 2,
+    maxlength: 50,
   },
   lastName: {
     type: String,
@@ -32,6 +34,19 @@ const userSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  photoUrl:{
+    type: String,
+    required: true,
+    trim: true,
+    default: "https://example.com/default.jpg",
+  },
+  skills: {
+    type: [String], // Array of strings
+    enum: ['math', 'english', 'science', 'history', 'geography'],
+    required: true,
+  }  
+},{
+  timestamps: true,
 });
 
 const UserModel = mongoose.model("user", userSchema);
