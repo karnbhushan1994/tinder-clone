@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema({
   firstName: {
@@ -69,18 +71,27 @@ const userSchema = new mongoose.Schema({
   skills: {
     type: [String],
     enum: ['math', 'english', 'science', 'history', 'geography'],
-    required: true,
-    validate: {
-      validator: function (value) {
-        return Array.isArray(value) && value.length > 0;
-      },
-      message: "At least one skill must be selected",
-    },
   },
 }, {
   timestamps: true,
 });
 
-const UserModel = mongoose.model("user", userSchema);
+// ✅ JWT Generation Method
+userSchema.methods.generateAuthToken = function () {
+  return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+};
+
+// ✅ Password Compare Method
+userSchema.methods.validatePassword = async function (inputPassword) {
+  return await bcrypt.compare(inputPassword, this.password);
+};
+
+// ✅ Check if Email is Taken (Static)
+userSchema.statics.isEmailTaken = async function (emailId) {
+  return await this.findOne({ emailId });
+};
+
+// ✅ Register the model with name "User" (case-sensitive)
+const UserModel = mongoose.model("User", userSchema);
 
 module.exports = UserModel;

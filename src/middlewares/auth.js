@@ -1,35 +1,27 @@
-// Middleware to check if the user is an admin
-// This middleware checks if the user is authenticated and has admin privileges
-const adminAuth = (req, res, next) => {
-  const token = req.headers['authorization'];
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+
+const userAuth = async (req, res, next) => {
+  // Get token from cookie or Authorization header (Bearer token)
+  const token = req.cookies.jwt_token || req.headers.authorization?.split(" ")[1];
+
   if (!token) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    return res.status(401).json({ message: "No token provided" });
   }
 
-  // Verify the token (this is just a placeholder, implement your own logic)
-  if (token !== 'valid-token') {
-    return res.status(403).json({ message: 'Forbidden' });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded._id);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error("JWT verification failed:", err.message);
+    return res.status(403).json({ message: "Invalid token" });
   }
+};
 
-  next();
-}
-
-
-// Middleware to check if the user is an admin
-const isAdmin = (req, res, next) => {
-  const user = req.user; // Assuming user is set in the request object
-  if (!user || !user.isAdmin) {
-    return res.status(403).json({ message: 'Forbidden' });
-  }
-  next();
-}
-// Middleware to check if the user is authenticated
-const isAuthenticated = (req, res, next) => {
-  const user = req.user; // Assuming user is set in the request object
-  if (!user) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-  next();
-}
-
-module.exports = { adminAuth };
+module.exports = userAuth;

@@ -1,121 +1,36 @@
 const express = require("express");
 const connectDB = require("./config/database");
-const User = require("./models/user"); // Import the UserModel
+const User = require("./models/user");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const userAuth = require("./middlewares/auth");
+require("dotenv").config();
+const authRouter = require("./routes/auth");
+const requestRouter = require("./routes/request");
+const profileRouter = require("./routes/profile");
+const userRouter = require("./routes/user");
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
-app.post("/signup", async (req, res) => {
-  console.log("User signed up");
-  const user = new User(req.body); // creating new instance of user model
-  // creating new instance of user model
-  try {
-    await user.save();
-    // saving the user to the database
-    res.status(201).json({
-      message: "User created successfully",
-      user: user, // return the user object
-    });
-  } catch (error) {
-    console.error("Validation error:", error);
-    return res.status(400).json({ message: "Validation error", error });
+// Catch bad JSON
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    return res.status(400).json({ message: "Invalid JSON body" });
   }
-});
-
-app.get("/user", async (req, res) => {
-  const email = req.query.emailId; // GET requests should use query parameters
-  console.log(email);
-  try {
-    const foundUser = await User.findOne({ emailId: email });
-
-    if (!foundUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    return res.status(200).json({
-      message: "User fetched successfully",
-      user: foundUser,
-    });
-  } catch (error) {
-    console.error("Error fetching user:", error);
-    return res.status(500).json({ message: "Error fetching user", error });
-  }
+  next();
 });
 
 
-
-app.get("/feed", async (req, res) => {
-  try {
-    const foundUser = await User.find(); // Fetch all users from the database
-
-    if (!foundUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    return res.status(200).json({
-      message: "User fetched successfully",
-      user: foundUser,
-    });
-  } catch (error) {
-    console.error("Error fetching user:", error);
-    return res.status(500).json({ message: "Error fetching user", error });
-  }
-});
-
-app.delete("/user", async (req, res) => {
-  const userId = req.body.userId;
-
-  try {
-    const foundUser = await User.findOneAndDelete({ _id: userId });
-
-    if (!foundUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    return res.status(200).json({
-      message: "User deleted successfully",
-      user: foundUser,
-    }); 
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    return res.status(500).json({ message: "Error deleting user", error });
-  }
-});
-
-app.patch("/user/:userId", async (req, res) => {
-  const userId = req.params?.userId;
-  const allowedFields = ['firstName', 'lastName', 'age', 'gender', 'photoUrl', 'skills'];
-  const updateData = {};
-
-  for (const key of allowedFields) {
-    if (req.body.hasOwnProperty(key)) {
-      updateData[key] = req.body[key];
-    }
-  }
-
-  try {
-    const updatedUser = await User.findOneAndUpdate(
-      { _id: userId },
-      { $set: updateData },
-      { new: true, runValidators: true } // runValidators ensures enum checks, etc.
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    return res.status(200).json({
-      message: "User updated successfully",
-      user: updatedUser,
-    });
-  } catch (error) {
-    console.error("Error updating user:", error);
-    return res.status(500).json({ message: "Error updating user", error });
-  }
-});
+app.use("/api/auth", authRouter);
+app.use("/api/request", userAuth, requestRouter);
+app.use("/api/profile", userAuth, profileRouter);
+app.use("/api/user", userAuth, userRouter);
 
 
-connectDB(); // Connect to MongoDB
+connectDB();
 const PORT = process.env.PORT || 7777;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

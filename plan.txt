@@ -16,3 +16,32 @@ react stack
 --Node js 
 -Mongo DB
 
+====================================================================
+
+auth router
+
+    post/signup
+    post/Login
+    post/logout
+
+profile auther
+
+    get/profile/view
+    patch/profile/edit
+    patch/profile/password
+
+connectionRequestRouter
+    -post /request/sent/interested/:userId
+    -post /request/sent/rejected/:userId
+
+
+    -post /requested/review/accepted/:requestId
+    -post /requested/review/rejected/:requestId
+
+userRouter
+-Get  /user/connection
+-Get  /user/request/recived
+-Get  /user/feed/
+
+
+
